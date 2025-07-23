@@ -1,0 +1,396 @@
+--// 99 Nights in the Forest Script with Rayfield GUI //
+
+-- Load Rayfield UI Library
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Window Setup
+local Window = Rayfield:CreateWindow({
+    Name = "99 Nights",
+    LoadingTitle = "99 Nights Script",
+    LoadingSubtitle = "by Raygull",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil,
+        FileName = "99NightsSettings"
+    },
+    Discord = {
+        Enabled = false,
+        Invite = "",
+        RememberJoins = true
+    },
+    KeySystem = false,
+})
+
+-- Variables
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local teleportTargets = {
+--items
+    "Alien", "Alien Chest", "Alien Shelf", "Alpha Wolf", "Anvil Base",
+    "Apple", "Bandage", "Bear", "Berry", "Bolt", "Broken Fan", "Broken Microwave",
+    "Bunny", "Cake", "Carrot", "Chair Set", "Chest", "Coal", "Coin Stack",
+    "Crossbow Cultist", "Cultist", "Cultist Gem", "Fuel Canister", "Good Axe",
+    "Item Chest", "Item Chest2", "Item Chest3", "Item Chest4", "Item Chest6",
+    "Laser Fence Blueprint", "Leather Body", "Log", "Lost Child", "Lost Child2",
+    "Lost Child3", "Lost Child4", "Medkit", "Meat? Sandwich", "Old Flashlight",
+    "Old Radio", "Raygun", "Revolver", "Revolver Ammo", "Rifle", "Rifle Ammo",
+    "Seed Box", "Tyre", "UFO Component", "UFO Junk", "Washing Machine", "Wolf"
+}
+local espEnabled = false
+local ignoreDistanceFrom = Vector3.new(0, 0, 0)
+local minDistance = 50
+local AutoTreeFarmEnabled = false
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local AimbotEnabled = false
+--// FOV Circle Setup
+local FOVRadius = 100 -- pixels
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Color = Color3.fromRGB(128, 255, 0)
+FOVCircle.Thickness = 1
+FOVCircle.Radius = FOVRadius
+FOVCircle.Transparency = 0.5
+FOVCircle.Filled = false
+FOVCircle.Visible = false
+
+-- Update FOV Circle on screen
+RunService.RenderStepped:Connect(function()
+	if AimbotEnabled then
+		local mousePos = UserInputService:GetMouseLocation()
+		FOVCircle.Position = Vector2.new(mousePos.X, mousePos.Y)
+		FOVCircle.Visible = true
+	else
+		FOVCircle.Visible = false
+	end
+end)
+
+-- Aimbot Function (with FOV check)
+local function GetClosestTarget()
+	local closestTarget = nil
+	local shortestDistance = math.huge
+	local mouseLocation = UserInputService:GetMouseLocation()
+
+	for _, npc in ipairs(workspace:GetDescendants()) do
+		if table.find(TargetNames, npc.Name) and npc:FindFirstChild("HumanoidRootPart") then
+			local screenPos, onScreen = camera:WorldToViewportPoint(npc.HumanoidRootPart.Position)
+			if onScreen then
+				local distanceFromMouse = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(mouseLocation.X, mouseLocation.Y)).Magnitude
+				if distanceFromMouse < shortestDistance and distanceFromMouse <= FOVRadius then
+					shortestDistance = distanceFromMouse
+					closestTarget = npc
+				end
+			end
+		end
+	end
+
+	return closestTarget
+end
+local AimbotTargets = {"Alien", "Alpha Wolf", "Wolf", "Crossbow Cultist", "Cultist", "Bunny"}
+
+-- ESP Function
+local function createNPCESP(npc)
+    if not npc:IsA("Model") or npc:FindFirstChild("NPC_ESP") then return end
+    if not npc:FindFirstChild("HumanoidRootPart") then return end
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "NPC_ESP"
+    billboard.Adornee = npc:FindFirstChild("HumanoidRootPart")
+    billboard.Size = UDim2.new(0, 100, 0, 20)
+    billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+    billboard.AlwaysOnTop = true
+
+    local label = Instance.new("TextLabel", billboard)
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = npc.Name
+    label.TextColor3 = Color3.fromRGB(255, 85, 0)
+    label.TextStrokeTransparency = 0.5
+    label.Font = Enum.Font.GothamBold
+    label.TextScaled = true
+
+    billboard.Parent = npc
+end
+
+local function toggleNPCESP(state)
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if table.find(AimbotTargets, obj.Name) and obj:IsA("Model") then
+            if state then
+                createNPCESP(obj)
+            else
+                if obj:FindFirstChild("NPC_ESP") then
+                    obj:FindFirstChild("NPC_ESP"):Destroy()
+                end
+            end
+        end
+    end
+end
+
+-- Add real-time tracking for newly added NPCs
+workspace.DescendantAdded:Connect(function(desc)
+    if table.find(AimbotTargets, desc.Name) and desc:IsA("Model") then
+        task.wait(0.1)
+        if espEnabled then
+            createNPCESP(desc)
+        end
+    end
+end)
+
+local function createESP(item)
+    if not item:IsA("Model") or item:FindFirstChildWhichIsA("Humanoid") then return end
+    if item:FindFirstChild("ESP") then return end
+    local distance = (item:GetPivot().Position - ignoreDistanceFrom).Magnitude
+    if distance < minDistance then return end
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "ESP"
+    billboard.Adornee = item:FindFirstChildWhichIsA("BasePart")
+    billboard.Size = UDim2.new(0, 50, 0, 20)
+    billboard.AlwaysOnTop = true
+    billboard.StudsOffset = Vector3.new(0, 2, 0)
+
+    local label = Instance.new("TextLabel", billboard)
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.Text = item.Name
+    label.BackgroundTransparency = 1
+    label.TextColor3 = Color3.fromRGB(0, 128, 128)
+    label.TextStrokeTransparency = 0
+    label.TextScaled = true
+
+    billboard.Parent = item
+end
+
+
+local function toggleESP(state)
+    espEnabled = state
+    for _, item in pairs(workspace:GetDescendants()) do
+        if table.find(teleportTargets, item.Name) then
+            if espEnabled then
+                createESP(item)
+            else
+                if item:FindFirstChild("ESP") then
+                    item:FindFirstChild("ESP"):Destroy()
+                end
+            end
+        end
+    end
+end
+
+
+workspace.DescendantAdded:Connect(function(descendant)
+    if espEnabled and table.find(teleportTargets, descendant.Name) then
+        task.wait(0.1)
+        createESP(descendant)
+    end
+end)
+
+
+-- Auto Tree Farm Logic
+task.spawn(function()
+    while true do
+        if AutoTreeFarmEnabled then
+            local trees = {}
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if obj.Name == "Trunk" and obj.Parent and obj.Parent.Name == "Small Tree" then
+                    local distance = (obj.Position - ignoreDistanceFrom).Magnitude
+                    if distance > minDistance then
+                        table.insert(trees, obj)
+                    end
+                end
+            end
+
+            table.sort(trees, function(a, b)
+                local distA = (a.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+                local distB = (b.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+                return distA < distB
+            end)
+
+            for _, trunk in ipairs(trees) do
+                if not AutoTreeFarmEnabled then break end
+                if trunk and trunk.Parent and trunk.Parent.Name == "Small Tree" then
+                    LocalPlayer.Character:PivotTo(trunk.CFrame + Vector3.new(0, 3, 0))
+                    wait(0.2)
+
+                    while AutoTreeFarmEnabled and trunk and trunk.Parent and trunk.Parent.Name == "Small Tree" do
+                        mouse1click()
+                        wait(0.2)
+                    end
+
+                    wait(0.3) -- Small delay after break before moving to next
+                end
+            end
+        end
+        wait(1.5)
+    end
+end)
+
+
+-- Home Tab
+local HomeTab = Window:CreateTab("🏠Home🏠", 4483362458)
+
+HomeTab:CreateButton({
+    Name = "Teleport to (0,0,0)",
+    Callback = function()
+        game.Players.LocalPlayer.Character:PivotTo(CFrame.new(0, 10, 0))
+    end
+})
+
+
+HomeTab:CreateToggle({
+    Name = "Item ESP",
+    CurrentValue = false,
+    Callback = function(value)
+        toggleESP(value)
+    end
+})
+
+
+HomeTab:CreateToggle({
+    Name = "NPC ESP",
+    CurrentValue = false,
+    Callback = function(value)
+        toggleNPCESP(value)
+        Rayfield:Notify({
+            Title = "NPC ESP",
+            Content = value and "NPC ESP Enabled" or "NPC ESP Disabled",
+            Duration = 4,
+            Image = 4483362458,
+        })
+    end
+})
+
+
+HomeTab:CreateToggle({
+    Name = "Auto Tree Farm (Small Tree)",
+    CurrentValue = false,
+    Callback = function(value)
+        AutoTreeFarmEnabled = value
+    end
+})
+
+
+HomeTab:CreateToggle({
+    Name = "Aimbot (Right Click)",
+    CurrentValue = false,
+    Callback = function(value)
+        AimbotEnabled = value
+        Rayfield:Notify({
+            Title = "Aimbot",
+            Content = value and "Enabled - Hold Right Click to aim." or "Disabled.",
+            Duration = 4,
+            Image = 4483362458,
+        })
+    end
+})
+
+
+-- Teleport Tab
+local TeleTab = Window:CreateTab("🧲Teleport🧲", 4483362458)
+
+for _, itemName in ipairs(teleportTargets) do
+    TeleTab:CreateButton({
+        Name = "Teleport to " .. itemName,
+        Callback = function()
+            local closest = nil
+            local shortest = math.huge
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if obj.Name == itemName and obj:IsA("Model") then
+                    local distance = (obj:GetPivot().Position - ignoreDistanceFrom).Magnitude
+                    if distance >= minDistance and distance < shortest then
+                        closest = obj
+                        shortest = distance
+                    end
+                end
+            end
+            if closest then
+                game.Players.LocalPlayer.Character:PivotTo(closest:GetPivot() + Vector3.new(0, 5, 0))
+            else
+                Rayfield:Notify({
+                    Title = "Item Not Found",
+                    Content = itemName .. " not found or too close to origin.",
+                    Duration = 5,
+                    Image = 4483362458,
+                })
+            end
+        end
+    })
+end
+
+
+-- Auto Tree Farm Logic with 20s timeout per tree
+local badTrees = {}
+
+task.spawn(function()
+    while true do
+        if AutoTreeFarmEnabled then
+            local trees = {}
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if obj.Name == "Trunk" and obj.Parent and obj.Parent.Name == "Small Tree" then
+                    local distance = (obj.Position - ignoreDistanceFrom).Magnitude
+                    if distance > minDistance and not badTrees[obj:GetFullName()] then
+                        table.insert(trees, obj)
+                    end
+                end
+            end
+
+            table.sort(trees, function(a, b)
+                local distA = (a.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+                local distB = (b.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+                return distA < distB
+            end)
+
+            for _, trunk in ipairs(trees) do
+                if not AutoTreeFarmEnabled then break end
+                if trunk and trunk.Parent and trunk.Parent.Name == "Small Tree" then
+                    LocalPlayer.Character:PivotTo(trunk.CFrame + Vector3.new(0, 3, 0))
+                    wait(0.2)
+
+                    local startTime = tick()
+                    while AutoTreeFarmEnabled and trunk and trunk.Parent and trunk.Parent.Name == "Small Tree" do
+                        mouse1click()
+                        wait(0.2)
+                        if tick() - startTime > 12 then
+                            badTrees[trunk:GetFullName()] = true
+                            warn("Tree at " .. tostring(trunk.Position) .. " did not break in time. Skipping it from now on.")
+                            break
+                        end
+                    end
+
+                    wait(0.3)
+                end
+            end
+        end
+        wait(1.5)
+    end
+end)
+
+
+-- Aimbot Logic 
+RunService.RenderStepped:Connect(function()
+	if not AimbotEnabled then return end
+	if not UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then return end
+
+	local camera = workspace.CurrentCamera
+	local mousePos = UserInputService:GetMouseLocation()
+	local closestTarget = nil
+	local shortestDistance = math.huge
+
+	for _, obj in pairs(workspace:GetDescendants()) do
+		if table.find(AimbotTargets, obj.Name) and obj:IsA("Model") and obj:FindFirstChild("HumanoidRootPart") then
+			local hrp = obj.HumanoidRootPart
+			local screenPos, onScreen = camera:WorldToViewportPoint(hrp.Position)
+
+			if onScreen then
+				local distance = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+				if distance < shortestDistance and distance <= FOVRadius then
+					shortestDistance = distance
+					closestTarget = hrp
+				end
+			end
+		end
+	end
+
+	if closestTarget then
+		camera.CFrame = CFrame.new(camera.CFrame.Position, closestTarget.Position)
+	end
+end)
