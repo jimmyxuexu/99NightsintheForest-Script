@@ -38,7 +38,7 @@ local teleportTargets = {
     "Raygun", "Revolver", "Revolver Ammo", "Rifle", "Rifle Ammo", "Riot Shield", "Sapling", "Seed Box", "Sheet Metal", "Spear",
     "Steak", "Stronghold Diamond Chest", "Tyre", "UFO Component", "UFO Junk", "Washing Machine", "Wolf", "Wolf Corpse", "Wolf Pelt"
 }
-local AimbotTargets = {"Alien", "Alpha Wolf", "Wolf", "Crossbow Cultist", "Cultist", "Bunny", "Bear"}
+local AimbotTargets = {"Alien", "Alpha Wolf", "Wolf", "Crossbow Cultist", "Cultist", "Bunny", "Bear", "Polar Bear"}
 local espEnabled = false
 local npcESPEnabled = false
 local ignoreDistanceFrom = Vector3.new(0, 0, 0)
@@ -102,7 +102,7 @@ local function createESP(item)
         label.Size = UDim2.new(1, 0, 1, 0)
         label.Text = item.Name
         label.BackgroundTransparency = 1
-        label.TextColor3 = Color3.fromRGB(0, 255, 0)
+        label.TextColor3 = Color3.fromRGB(255, 255, 255)
         label.TextStrokeTransparency = 0
         label.TextScaled = true
         billboard.Parent = item
@@ -111,7 +111,7 @@ local function createESP(item)
     if not item:FindFirstChild("ESP_Highlight") then
         local highlight = Instance.new("Highlight")
         highlight.Name = "ESP_Highlight"
-        highlight.FillColor = Color3.fromRGB(0, 255, 0)
+        highlight.FillColor = Color3.fromRGB(255, 85, 0)
         highlight.OutlineColor = Color3.fromRGB(0, 100, 0)
         highlight.FillTransparency = 0.25
         highlight.OutlineTransparency = 0
@@ -249,7 +249,8 @@ end)
 
 -- Optimized Aimbot Logic
 local lastAimbotCheck = 0
-local aimbotCheckInterval = 0.05 -- 20 times per second
+local aimbotCheckInterval = 0.02 -- Faster reaction time
+local smoothness = 0.2 -- Smooth camera interpolation
 
 RunService.RenderStepped:Connect(function()
     if not AimbotEnabled or not UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
@@ -264,8 +265,7 @@ RunService.RenderStepped:Connect(function()
     local mousePos = UserInputService:GetMouseLocation()
     local closestTarget, shortestDistance = nil, math.huge
 
-    local descendants = workspace:GetDescendants()
-    for _, obj in ipairs(descendants) do
+    for _, obj in ipairs(workspace:GetDescendants()) do
         if table.find(AimbotTargets, obj.Name) and obj:IsA("Model") then
             local head = obj:FindFirstChild("Head")
             if head then
@@ -282,13 +282,16 @@ RunService.RenderStepped:Connect(function()
     end
 
     if closestTarget then
-        camera.CFrame = CFrame.new(camera.CFrame.Position, closestTarget.Position)
+        local currentCF = camera.CFrame
+        local targetCF = CFrame.new(camera.CFrame.Position, closestTarget.Position)
+        camera.CFrame = currentCF:Lerp(targetCF, smoothness) -- Smoothly rotate camera
         FOVCircle.Position = Vector2.new(mousePos.X, mousePos.Y)
         FOVCircle.Visible = true
     else
         FOVCircle.Visible = false
     end
 end)
+
 
 -- Fly Logic
 local flying, flyConnection = false, nil
@@ -336,7 +339,7 @@ end
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.F then
+    if input.KeyCode == Enum.KeyCode.Q then
         toggleFly(not flying)
     end
 end)
@@ -374,9 +377,16 @@ end)
 local HomeTab = Window:CreateTab("🏠Home🏠", 4483362458)
 
 HomeTab:CreateButton({
-    Name = "Teleport to (0,0,0)",
+    Name = "Teleport to Campfire",
     Callback = function()
         LocalPlayer.Character:PivotTo(CFrame.new(0, 10, 0))
+    end
+})
+
+HomeTab:CreateButton({
+    Name = "Teleport to Grinder",
+    Callback = function()
+        LocalPlayer.Character:PivotTo(CFrame.new(16.1,4,-4.6))
     end
 })
 
@@ -423,7 +433,7 @@ HomeTab:CreateToggle({
 })
 
 HomeTab:CreateToggle({
-    Name = "Fly (WASD + Space + Ctrl)",
+    Name = "Fly (WASD + Space + Shift)",
     CurrentValue = false,
     Callback = function(value)
         toggleFly(value)
@@ -489,4 +499,4 @@ for _, itemName in ipairs(teleportTargets) do
             end
         end
     })
-end
+end 
