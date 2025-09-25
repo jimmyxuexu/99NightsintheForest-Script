@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://99nightsintheforest-script.wiki/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1

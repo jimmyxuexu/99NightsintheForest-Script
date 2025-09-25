@@ -1,48 +1,57 @@
-# 99 Nights in the Forest Script
+# 99 Nights in the Forest 脚本网站
 
+一个现代化的HTML网站，提供99 Nights in the Forest游戏的完整脚本集合。
 
-### 🚀 Quick Loader
-Copy and paste one of these into your Roblox executor:
+## 🌟 功能特点
 
+- **一键复制** - 快速复制脚本代码
+- **分类组织** - 按功能分类（传送、ESP、自瞄等）
+- **搜索筛选** - 快速找到需要的脚本
+- **响应式设计** - 支持移动端和桌面端
+- **SEO优化** - 针对搜索引擎优化
 
-### 🌟 Stable Release
- ```lua
-   loadstring(game:HttpGet("https://raw.githubusercontent.com/raygull3d/99-Nights-in-the-Forest-Script/refs/heads/main/99%20Days%20Scirpt%20By%20Raygull.lua"))()
-``` 
+## 📁 文件结构
 
-### 🧪 Beta Version
- ```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/raygull3d/99-Nights-in-the-Forest-Script/refs/heads/main/99%20Days%20Scirpt%20By%20Raygull%20Beta%201.0.lua"))()
+```
+/
+├── index.html          # 主页面
+├── styles.css          # 样式文件
+├── script.js           # JavaScript功能
+├── sitemap.xml         # 网站地图
+├── robots.txt          # 爬虫规则
+└── README.md           # 说明文档
 ```
 
+## 🚀 部署说明
 
+1. 将所有文件上传到你的网站服务器
+2. 确保域名指向 `99nightsintheforest-script.wiki`
+3. 配置HTTPS证书
+4. 提交sitemap到Google Search Console
 
-### ✨ Features
-Teleport: Instantly travel to campfire, grinder, or any item
+## 📱 响应式支持
 
-Item & NPC ESP: See valuable items and enemies through walls
+- 桌面端：1200px+
+- 平板端：768px - 1199px
+- 移动端：< 768px
 
-Aimbot: Hold right-click to lock on targets
+## 🔍 SEO优化
 
-Fly Mode: WASD + Space/Shift for full freedom (Q to start and stop flying)
+- 完整的meta标签
+- 结构化数据
+- 网站地图
+- 语义化HTML
+- 快速加载
 
-Speedhack: Adjustable walk speed
+## ⚠️ 免责声明
 
-Auto Farming: Log and tree auto farm (auto log farming not working)
+本网站提供的脚本仅供学习和测试使用。在Roblox中使用脚本可能导致封号，请自行承担风险。
 
-Anti-Death: Automatic safe teleport when danger is near
+## 👨‍💻 开发者
 
-No Fog: Toggle for clear vision anytime
+- 脚本开发：Raygull
+- 网站设计：AI Assistant
 
+## 📄 许可证
 
-
-
-### ⚠️ Disclaimer
-For educational and testing purposes only.
-
-Using scripts in Roblox can result in bans. Use at your own risk.
-
-
-
-### 🙏 Credits
-Script & GUI by Raygull
+© 2024 99nightsintheforest-script.wiki. 保留所有权利。
