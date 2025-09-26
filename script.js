@@ -2,27 +2,24 @@
 const scriptsData = [
     {
         id: 'teleport-campfire',
-        title: '传送到营火',
+        title: 'Teleport to Campfire',
         category: 'teleport',
-        description: '瞬间传送到营火位置，方便快速回到安全区域',
-        code: `-- 传送到营火
-LocalPlayer.Character:PivotTo(CFrame.new(0, 10, 0))`
+        description: 'Instantly teleport to campfire location for quick return to safe area',
+        code: `LocalPlayer.Character:PivotTo(CFrame.new(0, 10, 0))`
     },
     {
         id: 'teleport-grinder',
-        title: '传送到磨坊',
+        title: 'Teleport to Mill',
         category: 'teleport',
-        description: '传送到磨坊位置，用于处理物品',
-        code: `-- 传送到磨坊
-LocalPlayer.Character:PivotTo(CFrame.new(16.1,4,-4.6))`
+        description: 'Teleport to mill location for item processing',
+        code: `LocalPlayer.Character:PivotTo(CFrame.new(16.1,4,-4.6))`
     },
     {
         id: 'item-esp',
-        title: '物品ESP',
+        title: 'Item ESP',
         category: 'esp',
-        description: '显示所有可传送物品的位置和名称',
-        code: `-- 物品ESP功能
-local function createESP(item)
+        description: 'Shows location and name of all teleportable items',
+        code: `local function createESP(item)
     local adorneePart
     if item:IsA("Model") then
         if item:FindFirstChildWhichIsA("Humanoid") then return end
@@ -58,9 +55,8 @@ end`
         id: 'npc-esp',
         title: 'NPC ESP',
         category: 'esp',
-        description: '显示NPC位置和名称，方便识别敌人',
-        code: `-- NPC ESP功能
-local npcBoxes = {}
+        description: 'Shows NPC location and name for easy enemy identification',
+        code: `local npcBoxes = {}
 
 local function createNPCESP(npc)
     if not npc:IsA("Model") or npc:FindFirstChild("HumanoidRootPart") == nil then return end
@@ -88,11 +84,10 @@ end`
     },
     {
         id: 'aimbot',
-        title: '自瞄辅助',
+        title: 'Aimbot Assistant',
         category: 'aimbot',
-        description: '右键按住自动瞄准最近的敌人',
-        code: `-- 自瞄功能
-local AimbotEnabled = false
+        description: 'Right-click and hold to automatically aim at nearest enemy',
+        code: `local AimbotEnabled = false
 local FOVRadius = 100
 local AimbotTargets = {"Alpha Wolf", "Wolf", "Crossbow Cultist", "Cultist", "Bunny", "Bear", "Polar Bear"}
 
@@ -129,11 +124,10 @@ end)`
     },
     {
         id: 'fly-mode',
-        title: '飞行模式',
+        title: 'Fly Mode',
         category: 'fly',
-        description: 'WASD + 空格/Shift 控制飞行，Q键开关',
-        code: `-- 飞行功能
-local flying, flyConnection = false, nil
+        description: 'WASD + Space/Shift to control flight, Q key to toggle',
+        code: `local flying, flyConnection = false, nil
 local speed = 60
 
 local function startFlying()
@@ -171,11 +165,10 @@ end)`
     },
     {
         id: 'speed-hack',
-        title: '速度调整',
+        title: 'Speed Adjustment',
         category: 'utility',
-        description: '调整角色移动速度',
-        code: `-- 速度调整
-local currentSpeed = 16
+        description: 'Adjust character movement speed',
+        code: `local currentSpeed = 16
 
 local function setWalkSpeed(speed)
     currentSpeed = speed
@@ -185,16 +178,14 @@ local function setWalkSpeed(speed)
     end
 end
 
--- 设置速度为50
 setWalkSpeed(50)`
     },
     {
         id: 'auto-tree-farm',
-        title: '自动砍树',
+        title: 'Auto Tree Farm',
         category: 'farm',
-        description: '自动寻找并砍伐小树',
-        code: `-- 自动砍树功能
-local AutoTreeFarmEnabled = false
+        description: 'Automatically find and chop small trees',
+        code: `local AutoTreeFarmEnabled = false
 local badTrees = {}
 
 task.spawn(function()
@@ -236,11 +227,10 @@ end)`
     },
     {
         id: 'anti-death',
-        title: '防死亡传送',
+        title: 'Anti-Death Teleport',
         category: 'utility',
-        description: '检测到危险敌人时自动传送到安全位置',
-        code: `-- 防死亡传送
-local AntiDeathEnabled = false
+        description: 'Automatically teleport to safe location when dangerous enemies are detected',
+        code: `local AntiDeathEnabled = false
 local AntiDeathRadius = 50
 local AntiDeathTargets = {
     Alien = true,
@@ -274,11 +264,10 @@ end)`
     },
     {
         id: 'no-fog',
-        title: '清除雾气',
+        title: 'Remove Fog',
         category: 'utility',
-        description: '移除游戏中的雾气效果，获得清晰视野',
-        code: `-- 清除雾气
-local defaultFogStart = game.Lighting.FogStart
+        description: 'Remove fog effects in the game for clear vision',
+        code: `local defaultFogStart = game.Lighting.FogStart
 local defaultFogEnd = game.Lighting.FogEnd
 local fogEnabled = false
 
@@ -293,8 +282,339 @@ local function toggleFog(state)
     end
 end
 
--- 启用清除雾气
 toggleFog(true)`
+    },
+    {
+        id: 'kill-aura',
+        title: 'Kill Aura',
+        category: 'combat',
+        description: 'Automatically attack nearby enemies within range',
+        code: `local KillAuraEnabled = false
+local KillAuraRadius = 50
+local AimbotTargets = {"Alien", "Alpha Wolf", "Wolf", "Crossbow Cultist", "Cultist", "Bunny", "Bear", "Polar Bear"}
+
+task.spawn(function()
+    while true do
+        if KillAuraEnabled then
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local pos = hrp.Position
+                for _, npc in ipairs(workspace:GetDescendants()) do
+                    if npc:IsA("Model") and npc:FindFirstChild("HumanoidRootPart") and table.find(AimbotTargets, npc.Name) then
+                        local npcPos = npc.HumanoidRootPart.Position
+                        if (npcPos - pos).Magnitude <= KillAuraRadius then
+                            mouse1click()
+                            break
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(0.1)
+    end
+end)`
+    },
+    {
+        id: 'auto-collect',
+        title: 'Auto Collect Items',
+        category: 'farm',
+        description: 'Automatically collect nearby items and resources',
+        code: `local AutoCollectEnabled = false
+local teleportTargets = {"Apple", "Bandage", "Berry", "Cake", "Carrot", "Chilli", "Coal", "Deer", "Fuel Canister", "Log", "Medkit", "Morsel", "Steak"}
+
+task.spawn(function()
+    while true do
+        if AutoCollectEnabled then
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local pos = hrp.Position
+                for _, item in ipairs(workspace:GetDescendants()) do
+                    if table.find(teleportTargets, item.Name) and item:IsA("Model") then
+                        local itemPos = item:FindFirstChildWhichIsA("BasePart")
+                        if itemPos and (itemPos.Position - pos).Magnitude <= 100 then
+                            LocalPlayer.Character:PivotTo(itemPos.CFrame + Vector3.new(0, 2, 0))
+                            task.wait(0.5)
+                            pressKey("F")
+                            task.wait(0.2)
+                            pressKey("E")
+                            task.wait(0.5)
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(1)
+    end
+end)`
+    },
+    {
+        id: 'chest-esp',
+        title: 'Chest ESP',
+        category: 'esp',
+        description: 'Highlight chests and valuable containers with golden glow',
+        code: `local ChestESPEnabled = false
+
+local function createChestESP(chest)
+    local adorneePart = chest:FindFirstChildWhichIsA("BasePart")
+    if not adorneePart then return end
+
+    if not chest:FindFirstChild("ChestESP_Billboard") then
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "ChestESP_Billboard"
+        billboard.Adornee = adorneePart
+        billboard.Size = UDim2.new(0, 100, 0, 30)
+        billboard.AlwaysOnTop = true
+        billboard.StudsOffset = Vector3.new(0, 3, 0)
+
+        local label = Instance.new("TextLabel", billboard)
+        label.Size = UDim2.new(1, 0, 1, 0)
+        label.Text = "💎 CHEST 💎"
+        label.BackgroundTransparency = 1
+        label.TextColor3 = Color3.fromRGB(255, 215, 0)
+        label.TextStrokeTransparency = 0
+        label.TextScaled = true
+        billboard.Parent = chest
+    end
+
+    if not chest:FindFirstChild("ChestESP_Highlight") then
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "ChestESP_Highlight"
+        highlight.FillColor = Color3.fromRGB(255, 215, 0)
+        highlight.OutlineColor = Color3.fromRGB(255, 165, 0)
+        highlight.FillTransparency = 0.3
+        highlight.OutlineTransparency = 0
+        highlight.Adornee = chest:IsA("Model") and chest or adorneePart
+        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        highlight.Parent = chest
+    end
+end`
+    },
+    {
+        id: 'auto-cook',
+        title: 'Auto Cook',
+        category: 'survival',
+        description: 'Automatically use cooking stations to prepare food',
+        code: `local AutoCookEnabled = false
+
+task.spawn(function()
+    while true do
+        if AutoCookEnabled then
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                for _, obj in ipairs(workspace:GetDescendants()) do
+                    if obj.Name == "Cooking Station" or obj.Name == "Campfire" then
+                        local objPos = obj:FindFirstChildWhichIsA("BasePart")
+                        if objPos and (objPos.Position - hrp.Position).Magnitude <= 200 then
+                            LocalPlayer.Character:PivotTo(objPos.CFrame + Vector3.new(0, 2, 0))
+                            task.wait(0.5)
+                            pressKey("F")
+                            task.wait(2)
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(5)
+    end
+end)`
+    },
+    {
+        id: 'inf-hunger',
+        title: 'Inf Hunger',
+        category: 'survival',
+        description: 'Maintain maximum health and hunger levels',
+        code: `local InfHungerEnabled = false
+
+task.spawn(function()
+    while true do
+        if InfHungerEnabled then
+            local character = LocalPlayer.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.Health = math.max(humanoid.Health, 100)
+                end
+            end
+        end
+        task.wait(0.1)
+    end
+end)`
+    },
+    {
+        id: 'inf-stamina',
+        title: 'Inf Stamina',
+        category: 'survival',
+        description: 'Maintain maximum stamina and movement speed',
+        code: `local InfStaminaEnabled = false
+
+task.spawn(function()
+    while true do
+        if InfStaminaEnabled then
+            local character = LocalPlayer.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.WalkSpeed = math.max(humanoid.WalkSpeed, 50)
+                end
+            end
+        end
+        task.wait(0.1)
+    end
+end)`
+    },
+    {
+        id: 'hitbox-extender',
+        title: 'Hitbox Extender',
+        category: 'combat',
+        description: 'Expand enemy hitboxes for easier targeting',
+        code: `local HitboxExtenderEnabled = false
+local HitboxMultiplier = 2
+local AimbotTargets = {"Alien", "Alpha Wolf", "Wolf", "Crossbow Cultist", "Cultist", "Bunny", "Bear", "Polar Bear"}
+
+task.spawn(function()
+    while true do
+        if HitboxExtenderEnabled then
+            for _, npc in ipairs(workspace:GetDescendants()) do
+                if npc:IsA("Model") and npc:FindFirstChild("HumanoidRootPart") and table.find(AimbotTargets, npc.Name) then
+                    local hrp = npc.HumanoidRootPart
+                    if hrp then
+                        local currentSize = hrp.Size
+                        hrp.Size = currentSize * HitboxMultiplier
+                    end
+                end
+            end
+        end
+        task.wait(0.1)
+    end
+end)`
+    },
+    {
+        id: 'auto-win',
+        title: 'Auto Win',
+        category: 'utility',
+        description: 'Automatically complete game objectives and win conditions',
+        code: `local AutoWinEnabled = false
+
+task.spawn(function()
+    while true do
+        if AutoWinEnabled then
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                for _, location in ipairs({"Campfire", "Grinder", "Stronghold Diamond Chest"}) do
+                    for _, obj in ipairs(workspace:GetDescendants()) do
+                        if obj.Name == location then
+                            local objPos = obj:FindFirstChildWhichIsA("BasePart")
+                            if objPos and (objPos.Position - hrp.Position).Magnitude <= 500 then
+                                LocalPlayer.Character:PivotTo(objPos.CFrame + Vector3.new(0, 2, 0))
+                                task.wait(1)
+                                pressKey("F")
+                                task.wait(0.5)
+                                pressKey("E")
+                                task.wait(1)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(5)
+    end
+end)`
+    },
+    {
+        id: 'teleport-players',
+        title: 'Teleport to Players',
+        category: 'teleport',
+        description: 'Teleport to other players in the game',
+        code: `local TeleportToPlayersEnabled = false
+
+task.spawn(function()
+    while true do
+        if TeleportToPlayersEnabled then
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                for _, player in ipairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                        local playerPos = player.Character.HumanoidRootPart.Position
+                        if (playerPos - hrp.Position).Magnitude <= 1000 then
+                            LocalPlayer.Character:PivotTo(playerPos + Vector3.new(0, 5, 0))
+                            task.wait(2)
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(3)
+    end
+end)`
+    },
+    {
+        id: 'auto-farm-all',
+        title: 'Auto Farm All Items',
+        category: 'farm',
+        description: 'Automatically collect all types of items and resources',
+        code: `local AutoFarmAllEnabled = false
+local teleportTargets = {"Alien", "Alien Chest", "Alpha Wolf", "Apple", "Bandage", "Bear", "Berry", "Bunny", "Cake", "Carrot", "Chest", "Chilli", "Coal", "Deer", "Fuel Canister", "Log", "Medkit", "Morsel", "Steak", "Wolf"}
+
+task.spawn(function()
+    while true do
+        if AutoFarmAllEnabled then
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                for _, itemName in ipairs(teleportTargets) do
+                    for _, obj in ipairs(workspace:GetDescendants()) do
+                        if obj.Name == itemName and obj:IsA("Model") then
+                            local objPos = obj:FindFirstChildWhichIsA("BasePart")
+                            if objPos and (objPos.Position - hrp.Position).Magnitude <= 200 then
+                                LocalPlayer.Character:PivotTo(objPos.CFrame + Vector3.new(0, 2, 0))
+                                task.wait(0.5)
+                                pressKey("F")
+                                task.wait(0.2)
+                                pressKey("E")
+                                task.wait(0.5)
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(2)
+    end
+end)`
+    },
+    {
+        id: 'bring-items',
+        title: 'Bring Items',
+        category: 'farm',
+        description: 'Teleport items directly to your location',
+        code: `local BringItemsEnabled = false
+local teleportTargets = {"Apple", "Bandage", "Berry", "Cake", "Carrot", "Chilli", "Coal", "Deer", "Fuel Canister", "Log", "Medkit", "Morsel", "Steak"}
+
+task.spawn(function()
+    while true do
+        if BringItemsEnabled then
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local pos = hrp.Position
+                for _, item in ipairs(workspace:GetDescendants()) do
+                    if table.find(teleportTargets, item.Name) and item:IsA("Model") then
+                        local itemPos = item:FindFirstChildWhichIsA("BasePart")
+                        if itemPos and (itemPos.Position - pos).Magnitude <= 100 then
+                            LocalPlayer.Character:PivotTo(itemPos.CFrame + Vector3.new(0, 2, 0))
+                            task.wait(0.5)
+                            pressKey("F")
+                            task.wait(0.2)
+                            pressKey("E")
+                            task.wait(0.5)
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(1)
+    end
+end)`
     }
 ];
 
@@ -332,12 +652,12 @@ function createScriptCard(script) {
         <div class="script-content">
             <p class="script-description">${script.description}</p>
             <div class="script-code">
-                <button class="copy-btn" onclick="copyScript('${script.id}')">复制</button>
+                <button class="copy-btn" onclick="copyScript('${script.id}')">Copy</button>
                 <pre><code>${script.code}</code></pre>
             </div>
             <div class="script-actions">
-                <button class="action-btn action-btn-primary" onclick="copyScript('${script.id}')">复制脚本</button>
-                <button class="action-btn action-btn-secondary" onclick="showScriptInfo('${script.id}')">查看详情</button>
+                <button class="action-btn action-btn-primary" onclick="copyScript('${script.id}')">Copy Script</button>
+                <button class="action-btn action-btn-secondary" onclick="showScriptInfo('${script.id}')">View Details</button>
             </div>
         </div>
     `;
@@ -347,12 +667,14 @@ function createScriptCard(script) {
 
 function getCategoryName(category) {
     const categoryNames = {
-        'teleport': '传送',
+        'teleport': 'Teleport',
         'esp': 'ESP',
-        'aimbot': '自瞄',
-        'fly': '飞行',
-        'farm': '农场',
-        'utility': '工具'
+        'aimbot': 'Aimbot',
+        'fly': 'Fly',
+        'farm': 'Farm',
+        'utility': 'Utility',
+        'combat': 'Combat',
+        'survival': 'Survival'
     };
     return categoryNames[category] || category;
 }
@@ -360,10 +682,17 @@ function getCategoryName(category) {
 function copyScript(scriptId) {
     const script = scriptsData.find(s => s.id === scriptId);
     if (script) {
-        navigator.clipboard.writeText(script.code).then(() => {
-            showToast('脚本已复制到剪贴板！');
+        // 清理代码，移除中文注释和标题
+        let cleanCode = script.code
+            .replace(/--.*[\u4e00-\u9fff].*/g, '') // 移除中文注释
+            .replace(/^[\s\n]*--.*[\u4e00-\u9fff].*$/gm, '') // 移除多行中文注释
+            .replace(/^\s*--.*[\u4e00-\u9fff].*$/gm, '') // 移除行首中文注释
+            .trim();
+        
+        navigator.clipboard.writeText(cleanCode).then(() => {
+            showToast('Script copied to clipboard!');
         }).catch(() => {
-            showToast('复制失败，请手动选择代码复制');
+            showToast('Copy failed, please manually select and copy the code');
         });
     }
 }
@@ -371,7 +700,7 @@ function copyScript(scriptId) {
 function showScriptInfo(scriptId) {
     const script = scriptsData.find(s => s.id === scriptId);
     if (script) {
-        alert(`${script.title}\n\n${script.description}\n\n使用方法：复制脚本代码到Roblox执行器中运行`);
+        alert(`${script.title}\n\n${script.description}\n\nUsage: Copy script code to Roblox executor and run`);
     }
 }
 
@@ -403,6 +732,9 @@ function setupEventListeners() {
     navLinks.forEach(link => {
         link.addEventListener('click', handleNavClick);
     });
+
+    // FAQ功能
+    setupFAQ();
 }
 
 function handleSearch(event) {
@@ -474,5 +806,61 @@ function setupSmoothScrolling() {
 
     document.querySelectorAll('.fade-in').forEach(el => {
         observer.observe(el);
+    });
+
+    // 添加滚动监听，自动更新导航栏活跃状态
+    setupScrollSpy();
+}
+
+function setupScrollSpy() {
+    const sections = ['home', 'scripts', 'features', 'about', 'faq'];
+    const navLinks = document.querySelectorAll('.nav-link');
+    
+    window.addEventListener('scroll', () => {
+        let current = '';
+        
+        sections.forEach(section => {
+            const element = document.getElementById(section);
+            if (element) {
+                const rect = element.getBoundingClientRect();
+                if (rect.top <= 100 && rect.bottom >= 100) {
+                    current = section;
+                }
+            }
+        });
+        
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === `#${current}`) {
+                link.classList.add('active');
+            }
+        });
+    });
+}
+
+function setupFAQ() {
+    const faqItems = document.querySelectorAll('.faq-item');
+    
+    faqItems.forEach(item => {
+        const question = item.querySelector('.faq-question');
+        const toggle = item.querySelector('.faq-toggle');
+        
+        question.addEventListener('click', () => {
+            const isActive = item.classList.contains('active');
+            
+            // 关闭所有其他FAQ项
+            faqItems.forEach(otherItem => {
+                if (otherItem !== item) {
+                    otherItem.classList.remove('active');
+                }
+            });
+            
+            // 切换当前FAQ项
+            if (isActive) {
+                item.classList.remove('active');
+            } else {
+                item.classList.add('active');
+            }
+        });
     });
 }

@@ -1,8 +1,27 @@
 User-agent: *
 Allow: /
 
-# Sitemap
+# 允许所有搜索引擎抓取
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+# 禁止抓取的文件类型
+Disallow: *.js$
+Disallow: *.css$
+Disallow: /debug.js
+Disallow: /test.html
+
+# Sitemap位置
 Sitemap: https://99nightsintheforest-script.wiki/sitemap.xml
 
-# Crawl-delay
+# 抓取延迟（秒）
 Crawl-delay: 1
+
+# 网站管理员邮箱
+# Contact: admin@99nightsintheforest-script.wiki

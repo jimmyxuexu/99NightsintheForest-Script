@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调试测试页面</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>99夜森林脚本 - 调试测试</h1>
+    
+    <div class="test-section">
+        <h2>JavaScript 功能测试</h2>
+        <div id="js-test-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>脚本数据测试</h2>
+        <div id="data-test-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>复制功能测试</h2>
+        <button onclick="testCopyFunction()">测试复制功能</button>
+        <div id="copy-test-results"></div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // 测试JavaScript功能
+        function runTests() {
+            const jsResults = document.getElementById('js-test-results');
+            const dataResults = document.getElementById('data-test-results');
+            
+            // 测试脚本数据
+            try {
+                if (typeof scriptsData !== 'undefined' && Array.isArray(scriptsData)) {
+                    dataResults.innerHTML = `<p class="success">✓ 脚本数据加载成功，共 ${scriptsData.length} 个脚本</p>`;
+                    
+                    // 检查每个脚本的完整性
+                    let missingFields = [];
+                    scriptsData.forEach((script, index) => {
+                        const requiredFields = ['id', 'title', 'category', 'description', 'code'];
+                        const missing = requiredFields.filter(field => !script[field]);
+                        if (missing.length > 0) {
+                            missingFields.push(`脚本 ${index + 1} (${script.id || '未知'}) 缺少: ${missing.join(', ')}`);
+                        }
+                    });
+                    
+                    if (missingFields.length > 0) {
+                        dataResults.innerHTML += `<p class="error">✗ 发现数据问题:</p><ul>${missingFields.map(m => `<li>${m}</li>`).join('')}</ul>`;
+                    } else {
+                        dataResults.innerHTML += `<p class="success">✓ 所有脚本数据完整</p>`;
+                    }
+                } else {
+                    dataResults.innerHTML = `<p class="error">✗ 脚本数据未正确加载</p>`;
+                }
+            } catch (error) {
+                dataResults.innerHTML = `<p class="error">✗ 脚本数据测试失败: ${error.message}</p>`;
+            }
+            
+            // 测试基本JavaScript功能
+            try {
+                if (typeof initializeApp === 'function') {
+                    jsResults.innerHTML = `<p class="success">✓ initializeApp 函数存在</p>`;
+                } else {
+                    jsResults.innerHTML = `<p class="error">✗ initializeApp 函数不存在</p>`;
+                }
+                
+                if (typeof copyScript === 'function') {
+                    jsResults.innerHTML += `<p class="success">✓ copyScript 函数存在</p>`;
+                } else {
+                    jsResults.innerHTML += `<p class="error">✗ copyScript 函数不存在</p>`;
+                }
+                
+                if (typeof showToast === 'function') {
+                    jsResults.innerHTML += `<p class="success">✓ showToast 函数存在</p>`;
+                } else {
+                    jsResults.innerHTML += `<p class="error">✗ showToast 函数不存在</p>`;
+                }
+                
+            } catch (error) {
+                jsResults.innerHTML = `<p class="error">✗ JavaScript 功能测试失败: ${error.message}</p>`;
+            }
+        }
+        
+        // 测试复制功能
+        function testCopyFunction() {
+            const copyResults = document.getElementById('copy-test-results');
+            
+            if (typeof copyScript === 'function') {
+                try {
+                    // 测试复制第一个脚本
+                    if (scriptsData && scriptsData.length > 0) {
+                        copyScript(scriptsData[0].id);
+                        copyResults.innerHTML = `<p class="success">✓ 复制功能测试完成，请检查剪贴板</p>`;
+                    } else {
+                        copyResults.innerHTML = `<p class="error">✗ 没有可测试的脚本数据</p>`;
+                    }
+                } catch (error) {
+                    copyResults.innerHTML = `<p class="error">✗ 复制功能测试失败: ${error.message}</p>`;
+                }
+            } else {
+                copyResults.innerHTML = `<p class="error">✗ copyScript 函数不存在</p>`;
+            }
+        }
+        
+        // 页面加载完成后运行测试
+        document.addEventListener('DOMContentLoaded', function() {
+            runTests();
+        });
+    </script>
+</body>
+</html>

@@ -45,6 +45,21 @@ local ignoreDistanceFrom = Vector3.new(0, 0, 0)
 local minDistance = 50
 local AutoTreeFarmEnabled = false
 
+-- New Features Variables
+local KillAuraEnabled = false
+local AutoCollectEnabled = false
+local ChestESPEnabled = false
+local AutoCookEnabled = false
+local HitboxExtenderEnabled = false
+local InfHungerEnabled = false
+local InfStaminaEnabled = false
+local AutoWinEnabled = false
+local TeleportToPlayersEnabled = false
+local AutoFarmAllEnabled = false
+local BringItemsEnabled = false
+local KillAuraRadius = 50
+local HitboxMultiplier = 2
+
 -- Click simulation
 local VirtualInputManager = game:GetService("VirtualInputManager")
 function mouse1click()

@@ -30,20 +30,35 @@ local Window = Rayfield:CreateWindow({
 
 -- Variables
 local teleportTargets = {
-"Alpha Wolf", "Alpha Wolf Pelt", "Anvil Base", "Apple", "Bandage", "Bear", "Berry", 
+"Alien", "Alien Chest", "Alien Shelf", "Alpha Wolf", "Alpha Wolf Pelt", "Anvil Base", "Apple", "Bandage", "Bear", "Berry",
 "Bolt", "Broken Fan", "Broken Microwave", "Bunny", "Bunny Foot", "Cake", "Carrot", "Chair Set", "Chest", "Chilli",
-"Coal", "Coin Stack", "Crossbow Cultist", "Cultist", "Cultist Gem", "Deer", "Fuel Canister", "Good Sack", "Good Axe", "Iron Body",
-"Item Chest", "Item Chest2", "Item Chest3", "Item Chest4", "Item Chest6", "Leather Body", "Log", "Lost Child",
+"Coal", "Coin Stack", "Crossbow Cultist", "Cultist", "Cultist Gem", "Deer", "Fuel Canister", "Giant Sack", "Good Axe", "Iron Body",
+"Item Chest", "Item Chest2", "Item Chest3", "Item Chest4", "Item Chest6", "Laser Fence Blueprint", "Laser Sword", "Leather Body", "Log", "Lost Child",
 "Lost Child2", "Lost Child3", "Lost Child4", "Medkit", "Meat? Sandwich", "Morsel", "Old Car Engine", "Old Flashlight", "Old Radio", "Oil Barrel",
-"Revolver", "Revolver Ammo", "Rifle", "Rifle Ammo", "Riot Shield", "Sapling", "Seed Box", "Sheet Metal", "Spear",
-"Steak", "Stronghold Diamond Chest", "Tyre", "Washing Machine", "Wolf", "Wolf Corpse", "Wolf Pelt"
+"Raygun", "Revolver", "Revolver Ammo", "Rifle", "Rifle Ammo", "Riot Shield", "Sapling", "Seed Box", "Sheet Metal", "Spear",
+"Steak", "Stronghold Diamond Chest", "Tyre", "UFO Component", "UFO Junk", "Washing Machine", "Wolf", "Wolf Corpse", "Wolf Pelt"
 }
-local AimbotTargets = {"Alpha Wolf", "Wolf", "Crossbow Cultist", "Cultist", "Bunny", "Bear", "Polar Bear"}
+local AimbotTargets = {"Alien", "Alpha Wolf", "Wolf", "Crossbow Cultist", "Cultist", "Bunny", "Bear", "Polar Bear"}
 local espEnabled = false
 local npcESPEnabled = false
 local ignoreDistanceFrom = Vector3.new(0, 0, 0)
 local minDistance = 50
 local AutoTreeFarmEnabled = false
+
+-- New Features Variables
+local KillAuraEnabled = false
+local AutoCollectEnabled = false
+local ChestESPEnabled = false
+local AutoCookEnabled = false
+local HitboxExtenderEnabled = false
+local InfHungerEnabled = false
+local InfStaminaEnabled = false
+local AutoWinEnabled = false
+local TeleportToPlayersEnabled = false
+local AutoFarmAllEnabled = false
+local BringItemsEnabled = false
+local KillAuraRadius = 50
+local HitboxMultiplier = 2
 
 -- Click simulation
 local VirtualInputManager = game:GetService("VirtualInputManager")
@@ -131,6 +146,56 @@ local function toggleESP(state)
             else
                 if item:FindFirstChild("ESP_Billboard") then item.ESP_Billboard:Destroy() end
                 if item:FindFirstChild("ESP_Highlight") then item.ESP_Highlight:Destroy() end
+            end
+        end
+    end
+end
+
+-- Chest ESP Function
+local function createChestESP(chest)
+    local adorneePart = chest:FindFirstChildWhichIsA("BasePart")
+    if not adorneePart then return end
+
+    if not chest:FindFirstChild("ChestESP_Billboard") then
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "ChestESP_Billboard"
+        billboard.Adornee = adorneePart
+        billboard.Size = UDim2.new(0, 100, 0, 30)
+        billboard.AlwaysOnTop = true
+        billboard.StudsOffset = Vector3.new(0, 3, 0)
+
+        local label = Instance.new("TextLabel", billboard)
+        label.Size = UDim2.new(1, 0, 1, 0)
+        label.Text = "💎 CHEST 💎"
+        label.BackgroundTransparency = 1
+        label.TextColor3 = Color3.fromRGB(255, 215, 0)
+        label.TextStrokeTransparency = 0
+        label.TextScaled = true
+        billboard.Parent = chest
+    end
+
+    if not chest:FindFirstChild("ChestESP_Highlight") then
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "ChestESP_Highlight"
+        highlight.FillColor = Color3.fromRGB(255, 215, 0)
+        highlight.OutlineColor = Color3.fromRGB(255, 165, 0)
+        highlight.FillTransparency = 0.3
+        highlight.OutlineTransparency = 0
+        highlight.Adornee = chest:IsA("Model") and chest or adorneePart
+        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        highlight.Parent = chest
+    end
+end
+
+local function toggleChestESP(state)
+    ChestESPEnabled = state
+    for _, item in pairs(workspace:GetDescendants()) do
+        if string.find(item.Name, "Chest") or string.find(item.Name, "Stronghold") then
+            if ChestESPEnabled then
+                createChestESP(item)
+            else
+                if item:FindFirstChild("ChestESP_Billboard") then item.ChestESP_Billboard:Destroy() end
+                if item:FindFirstChild("ChestESP_Highlight") then item.ChestESP_Highlight:Destroy() end
             end
         end
     end
@@ -718,6 +783,210 @@ task.spawn(function()
     end
 end)
 
+-- Kill Aura Logic
+task.spawn(function()
+    while true do
+        if KillAuraEnabled then
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local pos = hrp.Position
+                for _, npc in ipairs(workspace:GetDescendants()) do
+                    if npc:IsA("Model") and npc:FindFirstChild("HumanoidRootPart") and table.find(AimbotTargets, npc.Name) then
+                        local npcPos = npc.HumanoidRootPart.Position
+                        if (npcPos - pos).Magnitude <= KillAuraRadius then
+                            -- Auto attack the target
+                            mouse1click()
+                            break
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(0.1)
+    end
+end)
+
+-- Auto Collect Items Logic
+task.spawn(function()
+    while true do
+        if AutoCollectEnabled or BringItemsEnabled then
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local pos = hrp.Position
+                for _, item in ipairs(workspace:GetDescendants()) do
+                    if table.find(teleportTargets, item.Name) and item:IsA("Model") then
+                        local itemPos = item:FindFirstChildWhichIsA("BasePart")
+                        if itemPos and (itemPos.Position - pos).Magnitude <= 100 then
+                            -- Teleport to item and collect
+                            LocalPlayer.Character:PivotTo(itemPos.CFrame + Vector3.new(0, 2, 0))
+                            task.wait(0.5)
+                            pressKey("F")
+                            task.wait(0.2)
+                            pressKey("E")
+                            task.wait(0.5)
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(1)
+    end
+end)
+
+-- Auto Cook Logic
+task.spawn(function()
+    while true do
+        if AutoCookEnabled then
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                -- Find cooking station
+                for _, obj in ipairs(workspace:GetDescendants()) do
+                    if obj.Name == "Cooking Station" or obj.Name == "Campfire" then
+                        local objPos = obj:FindFirstChildWhichIsA("BasePart")
+                        if objPos and (objPos.Position - hrp.Position).Magnitude <= 200 then
+                            LocalPlayer.Character:PivotTo(objPos.CFrame + Vector3.new(0, 2, 0))
+                            task.wait(0.5)
+                            pressKey("F")
+                            task.wait(2)
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(5)
+    end
+end)
+
+-- Inf Hunger Logic
+task.spawn(function()
+    while true do
+        if InfHungerEnabled then
+            local character = LocalPlayer.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.Health = math.max(humanoid.Health, 100)
+                end
+            end
+        end
+        task.wait(0.1)
+    end
+end)
+
+-- Inf Stamina Logic
+task.spawn(function()
+    while true do
+        if InfStaminaEnabled then
+            local character = LocalPlayer.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.WalkSpeed = math.max(humanoid.WalkSpeed, 50)
+                end
+            end
+        end
+        task.wait(0.1)
+    end
+end)
+
+-- Hitbox Extender Logic
+task.spawn(function()
+    while true do
+        if HitboxExtenderEnabled then
+            for _, npc in ipairs(workspace:GetDescendants()) do
+                if npc:IsA("Model") and npc:FindFirstChild("HumanoidRootPart") and table.find(AimbotTargets, npc.Name) then
+                    local hrp = npc.HumanoidRootPart
+                    if hrp then
+                        -- Expand hitbox by scaling the character
+                        local currentSize = hrp.Size
+                        hrp.Size = currentSize * HitboxMultiplier
+                    end
+                end
+            end
+        end
+        task.wait(0.1)
+    end
+end)
+
+-- Auto Win Logic
+task.spawn(function()
+    while true do
+        if AutoWinEnabled then
+            -- Check for win conditions and complete them automatically
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                -- Teleport to important locations
+                for _, location in ipairs({"Campfire", "Grinder", "Stronghold Diamond Chest"}) do
+                    for _, obj in ipairs(workspace:GetDescendants()) do
+                        if obj.Name == location then
+                            local objPos = obj:FindFirstChildWhichIsA("BasePart")
+                            if objPos and (objPos.Position - hrp.Position).Magnitude <= 500 then
+                                LocalPlayer.Character:PivotTo(objPos.CFrame + Vector3.new(0, 2, 0))
+                                task.wait(1)
+                                pressKey("F")
+                                task.wait(0.5)
+                                pressKey("E")
+                                task.wait(1)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(5)
+    end
+end)
+
+-- Teleport to Players Logic
+task.spawn(function()
+    while true do
+        if TeleportToPlayersEnabled then
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                for _, player in ipairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                        local playerPos = player.Character.HumanoidRootPart.Position
+                        if (playerPos - hrp.Position).Magnitude <= 1000 then
+                            LocalPlayer.Character:PivotTo(playerPos + Vector3.new(0, 5, 0))
+                            task.wait(2)
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(3)
+    end
+end)
+
+-- Auto Farm All Logic
+task.spawn(function()
+    while true do
+        if AutoFarmAllEnabled then
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                -- Farm all types of items
+                for _, itemName in ipairs(teleportTargets) do
+                    for _, obj in ipairs(workspace:GetDescendants()) do
+                        if obj.Name == itemName and obj:IsA("Model") then
+                            local objPos = obj:FindFirstChildWhichIsA("BasePart")
+                            if objPos and (objPos.Position - hrp.Position).Magnitude <= 200 then
+                                LocalPlayer.Character:PivotTo(objPos.CFrame + Vector3.new(0, 2, 0))
+                                task.wait(0.5)
+                                pressKey("F")
+                                task.wait(0.2)
+                                pressKey("E")
+                                task.wait(0.5)
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(2)
+    end
+end)
+
 
 -- Add toggle to Home Tab
 HomeTab:CreateToggle({
@@ -823,6 +1092,92 @@ GoodSackToggle = LogTab:CreateToggle({
 
 
 
+-- Advanced Features Tab
+local AdvancedTab = Window:CreateTab("⚡Advanced⚡", 4483362458)
+
+-- Kill Aura Settings
+AdvancedTab:CreateSlider({
+    Name = "Kill Aura Radius",
+    Range = {10, 200},
+    Increment = 5,
+    Suffix = "Studs",
+    CurrentValue = KillAuraRadius,
+    Callback = function(value)
+        KillAuraRadius = value
+    end
+})
+
+-- Hitbox Extender
+AdvancedTab:CreateToggle({
+    Name = "Hitbox Extender",
+    CurrentValue = false,
+    Callback = function(value)
+        HitboxExtenderEnabled = value
+        Rayfield:Notify({
+            Title = "Hitbox Extender",
+            Content = value and "Hitbox Extender Enabled" or "Hitbox Extender Disabled",
+            Duration = 3,
+            Image = 4483362458,
+        })
+    end
+})
+
+AdvancedTab:CreateSlider({
+    Name = "Hitbox Multiplier",
+    Range = {1, 5},
+    Increment = 0.5,
+    Suffix = "x",
+    CurrentValue = HitboxMultiplier,
+    Callback = function(value)
+        HitboxMultiplier = value
+    end
+})
+
+-- Auto Win
+AdvancedTab:CreateToggle({
+    Name = "Auto Win",
+    CurrentValue = false,
+    Callback = function(value)
+        AutoWinEnabled = value
+        Rayfield:Notify({
+            Title = "Auto Win",
+            Content = value and "Auto Win Enabled" or "Auto Win Disabled",
+            Duration = 3,
+            Image = 4483362458,
+        })
+    end
+})
+
+-- Teleport to Players
+AdvancedTab:CreateToggle({
+    Name = "Teleport to Players",
+    CurrentValue = false,
+    Callback = function(value)
+        TeleportToPlayersEnabled = value
+        Rayfield:Notify({
+            Title = "Teleport to Players",
+            Content = value and "Teleport to Players Enabled" or "Teleport to Players Disabled",
+            Duration = 3,
+            Image = 4483362458,
+        })
+    end
+})
+
+-- Auto Farm All
+AdvancedTab:CreateToggle({
+    Name = "Auto Farm All Items",
+    CurrentValue = false,
+    Callback = function(value)
+        AutoFarmAllEnabled = value
+        Rayfield:Notify({
+            Title = "Auto Farm All",
+            Content = value and "Auto Farm All Enabled" or "Auto Farm All Disabled",
+            Duration = 3,
+            Image = 4483362458,
+        })
+    end
+})
+
 -- Anti Death Settings Tab
 local AntiDeathTab = Window:CreateTab("🛡️Anti Death🛡️", 4483362458)
 
@@ -873,6 +1228,105 @@ HomeTab:CreateToggle({
         Rayfield:Notify({
             Title = "Fog Toggle",
             Content = fogEnabled and "No Fog Enabled" or "Fog Restored",
+            Duration = 3,
+            Image = 4483362458,
+        })
+    end
+})
+
+-- New Features Toggles
+HomeTab:CreateToggle({
+    Name = "Kill Aura",
+    CurrentValue = false,
+    Callback = function(value)
+        KillAuraEnabled = value
+        Rayfield:Notify({
+            Title = "Kill Aura",
+            Content = value and "Kill Aura Enabled" or "Kill Aura Disabled",
+            Duration = 3,
+            Image = 4483362458,
+        })
+    end
+})
+
+HomeTab:CreateToggle({
+    Name = "Auto Collect Items",
+    CurrentValue = false,
+    Callback = function(value)
+        AutoCollectEnabled = value
+        Rayfield:Notify({
+            Title = "Auto Collect",
+            Content = value and "Auto Collect Enabled" or "Auto Collect Disabled",
+            Duration = 3,
+            Image = 4483362458,
+        })
+    end
+})
+
+HomeTab:CreateToggle({
+    Name = "Chest ESP",
+    CurrentValue = false,
+    Callback = function(value)
+        toggleChestESP(value)
+        Rayfield:Notify({
+            Title = "Chest ESP",
+            Content = value and "Chest ESP Enabled" or "Chest ESP Disabled",
+            Duration = 3,
+            Image = 4483362458,
+        })
+    end
+})
+
+HomeTab:CreateToggle({
+    Name = "Auto Cook",
+    CurrentValue = false,
+    Callback = function(value)
+        AutoCookEnabled = value
+        Rayfield:Notify({
+            Title = "Auto Cook",
+            Content = value and "Auto Cook Enabled" or "Auto Cook Disabled",
+            Duration = 3,
+            Image = 4483362458,
+        })
+    end
+})
+
+HomeTab:CreateToggle({
+    Name = "Inf Hunger",
+    CurrentValue = false,
+    Callback = function(value)
+        InfHungerEnabled = value
+        Rayfield:Notify({
+            Title = "Inf Hunger",
+            Content = value and "Inf Hunger Enabled" or "Inf Hunger Disabled",
+            Duration = 3,
+            Image = 4483362458,
+        })
+    end
+})
+
+HomeTab:CreateToggle({
+    Name = "Inf Stamina",
+    CurrentValue = false,
+    Callback = function(value)
+        InfStaminaEnabled = value
+        Rayfield:Notify({
+            Title = "Inf Stamina",
+            Content = value and "Inf Stamina Enabled" or "Inf Stamina Disabled",
+            Duration = 3,
+            Image = 4483362458,
+        })
+    end
+})
+
+HomeTab:CreateToggle({
+    Name = "Bring Items",
+    CurrentValue = false,
+    Callback = function(value)
+        BringItemsEnabled = value
+        Rayfield:Notify({
+            Title = "Bring Items",
+            Content = value and "Bring Items Enabled" or "Bring Items Disabled",
             Duration = 3,
             Image = 4483362458,
         })
